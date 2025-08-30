@@ -2,12 +2,30 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+using System.Collections;   // delay function              
+using System.Collections.Generic;
+
 public class GameManage : MonoBehaviour
 {
-    public enum ePlayer { X, O};
-    private ePlayer currentPlayer = ePlayer.X;
+    public enum ePlayer { X, O };
+    private ePlayer currentPlayer = ePlayer.X; 
     public ChangeText[] changeTextArray = new ChangeText[9];
     public TMP_Text resultText;
+
+    // against the computer 
+    public bool vsAI = true; // turn on the optaion to play against the computer
+    private ePlayer human = ePlayer.X; // the human player symbol selection
+    private System.Random rng = new System.Random();
+
+    private bool IsCellEmpty(int i) =>
+        string.IsNullOrEmpty(changeTextArray[i].buttonText.text);
+
+    private void SetCell(int index, string symbol)
+    {
+        changeTextArray[index].NewText(symbol);
+        var btn = changeTextArray[index].GetComponent<Button>();
+        if (btn) btn.interactable = false;
+    }
 
     private void switchTurn()
     {
@@ -19,25 +37,67 @@ public class GameManage : MonoBehaviour
 
     public void OnCellClicked(int index)
     {
-        if (currentPlayer == ePlayer.X)
-            changeTextArray[index].NewText("X");
-        else
-            changeTextArray[index].NewText("O");
+        if (!IsCellEmpty(index)) return;
 
-        if (checkForWinner(out string winner) == true)
+        string symbol = (currentPlayer == ePlayer.X) ? "X" : "O";
+        SetCell(index, symbol);
+
+        if (checkForWinner(out string winner))
         {
             resultText.text = "Player " + winner + " Wins!";
             disableAllButtons();
+            return;
         }
-        else if (checkForTie() == true)
+        else if (checkForTie())
         {
             resultText.text = "It's a tie!";
+            return;
         }
-        else
+        switchTurn();
+
+        if (vsAI && currentPlayer == ePlayer.O)
         {
+            StartCoroutine(AIMoveRoutine());
+        }
+
+    }
+
+    private IEnumerator AIMoveRoutine()
+    {
+        yield return new WaitForSeconds(0.4f);
+
+        int aiChoice = PickRandomEmptyCell();
+        if (aiChoice != -1)
+        {
+            SetCell(aiChoice, "O");
+
+            if (checkForWinner(out string winner))
+            {
+                resultText.text = "Player " + winner + " Wins!";
+                disableAllButtons();
+                yield break;
+            }
+            else if (checkForTie())
+            {
+                resultText.text = "It's a tie!";
+                yield break;
+            }
+
             switchTurn();
         }
     }
+    private int PickRandomEmptyCell()
+    {
+        List<int> empty = new List<int>();
+        for (int i = 0; i < changeTextArray.Length; i++)
+            if (IsCellEmpty(i)) empty.Add(i);
+
+        if (empty.Count == 0) return -1;
+        int k = rng.Next(empty.Count);
+        return empty[k];
+    }
+
+
 
     private bool checkForWinner(out string winner)
     {
@@ -83,7 +143,7 @@ public class GameManage : MonoBehaviour
                 isTie = false;
                 break;
             }
-            
+
         }
 
         return isTie;
@@ -99,7 +159,7 @@ public class GameManage : MonoBehaviour
 
     public void OnRestartClicked()
     {
-        for(int i = 0; i < changeTextArray.Length; ++i)
+        for (int i = 0; i < changeTextArray.Length; ++i)
         {
             changeTextArray[i].buttonText.text = "";
             changeTextArray[i].GetComponent<Button>().interactable = true;

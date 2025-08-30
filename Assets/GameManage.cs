@@ -9,11 +9,6 @@ public class GameManage : MonoBehaviour
     public ChangeText[] changeTextArray = new ChangeText[9];
     public TMP_Text resultText;
 
-    public ePlayer CurrentPlayer
-    {
-        get { return  currentPlayer; }
-    }
-
     private void switchTurn()
     {
         if (currentPlayer == ePlayer.X)
@@ -29,17 +24,25 @@ public class GameManage : MonoBehaviour
         else
             changeTextArray[index].NewText("O");
 
-        if (checkForWinner() == true || checkForTie() == true)
+        if (checkForWinner(out string winner) == true)
         {
-            return;
+            resultText.text = "Player " + winner + " Wins!";
+            disableAllButtons();
         }
-
-        switchTurn();
+        else if (checkForTie() == true)
+        {
+            resultText.text = "It's a tie!";
+        }
+        else
+        {
+            switchTurn();
+        }
     }
 
-    private bool checkForWinner()
+    private bool checkForWinner(out string winner)
     {
         bool isWinner = false;
+        winner = "";
 
         int[,] winPatterns = new int[,]
       {
@@ -60,9 +63,7 @@ public class GameManage : MonoBehaviour
 
             if (!string.IsNullOrEmpty(valA) && valA == valB && valB == valC)
             {
-                Debug.Log("Winner: " + valA);
-                resultText.text = "Player " + valA + " Wins!";
-                disableAllButtons();
+                winner = valA;
                 isWinner = true;
                 break;
             }
@@ -73,15 +74,19 @@ public class GameManage : MonoBehaviour
 
     private bool checkForTie()
     {
+        bool isTie = true;
+
         for (int i = 0; i < changeTextArray.Length; ++i)
         {
             if (string.IsNullOrEmpty(changeTextArray[i].buttonText.text))
-                return false;
+            {
+                isTie = false;
+                break;
+            }
+            
         }
 
-        Debug.Log("Tie");
-        resultText.text = "It's a tie!";
-        return true;
+        return isTie;
     }
 
     private void disableAllButtons()

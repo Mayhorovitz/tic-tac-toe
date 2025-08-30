@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class GameManage : MonoBehaviour
 {
     public enum ePlayer { X, O};
     private ePlayer currentPlayer = ePlayer.X;
     public ChangeText[] changeTextArray = new ChangeText[9];
+    public TMP_Text resultText;
 
     public ePlayer CurrentPlayer
     {
@@ -59,6 +61,7 @@ public class GameManage : MonoBehaviour
             if (!string.IsNullOrEmpty(valA) && valA == valB && valB == valC)
             {
                 Debug.Log("Winner: " + valA);
+                resultText.text = "Player " + valA + " Wins!";
                 isWinner = true;
                 break;
             }

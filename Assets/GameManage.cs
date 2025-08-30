@@ -62,6 +62,7 @@ public class GameManage : MonoBehaviour
             {
                 Debug.Log("Winner: " + valA);
                 resultText.text = "Player " + valA + " Wins!";
+                disableAllButtons();
                 isWinner = true;
                 break;
             }
@@ -79,10 +80,19 @@ public class GameManage : MonoBehaviour
         }
 
         Debug.Log("Tie");
+        resultText.text = "It's a tie!";
         return true;
     }
 
-    public void RestartGame()
+    private void disableAllButtons()
+    {
+        for (int i = 0; i < changeTextArray.Length; i++)
+        {
+            changeTextArray[i].GetComponent<Button>().interactable = false;
+        }
+    }
+
+    public void OnRestartClicked()
     {
         for(int i = 0; i < changeTextArray.Length; ++i)
         {
@@ -91,5 +101,6 @@ public class GameManage : MonoBehaviour
         }
 
         currentPlayer = ePlayer.X;
+        resultText.text = "";
     }
 }

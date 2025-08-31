@@ -168,4 +168,5 @@ public class GameManage : MonoBehaviour
         currentPlayer = ePlayer.X;
         resultText.text = "";
     }
+
 }

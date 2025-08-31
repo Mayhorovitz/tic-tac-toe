@@ -14,7 +14,6 @@ public class GameManage : MonoBehaviour
 
     // against the computer 
     public bool vsAI = true; // turn on the optaion to play against the computer
-    private ePlayer human = ePlayer.X; // the human player symbol selection
     private System.Random rng = new System.Random();
 
     private bool IsCellEmpty(int i) =>

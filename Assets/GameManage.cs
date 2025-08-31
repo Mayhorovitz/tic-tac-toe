@@ -1,30 +1,18 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-
-using System.Collections;   // delay function              
+using System;
+using System.Collections;
 using System.Collections.Generic;
 
 public class GameManage : MonoBehaviour
 {
     public enum ePlayer { X, O };
-    private ePlayer currentPlayer = ePlayer.X; 
+    private ePlayer currentPlayer = ePlayer.X;
     public ChangeText[] changeTextArray = new ChangeText[9];
     public TMP_Text resultText;
-
-    // against the computer 
-    public bool vsAI = true; // turn on the optaion to play against the computer
-    private System.Random rng = new System.Random();
-
-    private bool IsCellEmpty(int i) =>
-        string.IsNullOrEmpty(changeTextArray[i].buttonText.text);
-
-    private void SetCell(int index, string symbol)
-    {
-        changeTextArray[index].NewText(symbol);
-        var btn = changeTextArray[index].GetComponent<Button>();
-        if (btn) btn.interactable = false;
-    }
+    private bool isComputerPlaying = false;
+    private System.Random rand = new System.Random();
 
     private void switchTurn()
     {
@@ -34,69 +22,78 @@ public class GameManage : MonoBehaviour
             currentPlayer = ePlayer.X;
     }
 
-    public void OnCellClicked(int index)
+    private void makeComputersMove()
     {
-        if (!IsCellEmpty(index)) return;
+        List<int> emptyCells = new List<int>();
+        int index, chosenCell;
 
-        string symbol = (currentPlayer == ePlayer.X) ? "X" : "O";
-        SetCell(index, symbol);
+        for (int i = 0; i < 9; ++i)
+        {
+            if (string.IsNullOrEmpty(changeTextArray[i].buttonText.text))
+            {
+                emptyCells.Add(i);
+            }
+        }
 
-        if (checkForWinner(out string winner))
+        if (emptyCells.Count == 0)
+            return;
+
+        index = rand.Next(emptyCells.Count);
+        chosenCell = emptyCells[index];
+        if (currentPlayer == ePlayer.X)
+            changeTextArray[chosenCell].NewText("X");
+        else
+            changeTextArray[chosenCell].NewText("O");
+    }
+
+    private bool isEndOfGame()
+    {
+        bool isEnd = false;
+
+        if (checkForWinner(out string winner) == true)
         {
             resultText.text = "Player " + winner + " Wins!";
             disableAllButtons();
-            return;
+            isEnd = true;
         }
-        else if (checkForTie())
+        else if (checkForTie() == true)
         {
             resultText.text = "It's a tie!";
-            return;
-        }
-        switchTurn();
-
-        if (vsAI && currentPlayer == ePlayer.O)
-        {
-            StartCoroutine(AIMoveRoutine());
+            isEnd = true;
         }
 
+        return isEnd;
     }
 
-    private IEnumerator AIMoveRoutine()
+    public void OnCellClicked(int index)
     {
-        yield return new WaitForSeconds(0.4f);
+        if (currentPlayer == ePlayer.X)
+            changeTextArray[index].NewText("X");
+        else
+            changeTextArray[index].NewText("O");
 
-        int aiChoice = PickRandomEmptyCell();
-        if (aiChoice != -1)
+        if (!isEndOfGame())
         {
-            SetCell(aiChoice, "O");
-
-            if (checkForWinner(out string winner))
+            switchTurn();
+            if (isComputerPlaying)
             {
-                resultText.text = "Player " + winner + " Wins!";
-                disableAllButtons();
-                yield break;
+                // מפעילים Coroutine לדיליי
+                StartCoroutine(ComputerMoveWithDelay());
             }
-            else if (checkForTie())
-            {
-                resultText.text = "It's a tie!";
-                yield break;
-            }
+        }
+    }
 
+    private IEnumerator ComputerMoveWithDelay()
+    {
+        yield return new WaitForSeconds(0.5f); // דיליי של חצי שנייה
+
+        makeComputersMove();
+
+        if (!isEndOfGame())
+        {
             switchTurn();
         }
     }
-    private int PickRandomEmptyCell()
-    {
-        List<int> empty = new List<int>();
-        for (int i = 0; i < changeTextArray.Length; i++)
-            if (IsCellEmpty(i)) empty.Add(i);
-
-        if (empty.Count == 0) return -1;
-        int k = rng.Next(empty.Count);
-        return empty[k];
-    }
-
-
 
     private bool checkForWinner(out string winner)
     {
@@ -106,7 +103,7 @@ public class GameManage : MonoBehaviour
         int[,] winPatterns = new int[,]
       {
         {0,1,2}, {3,4,5}, {6,7,8}, // rows
-        {0,3,6}, {1,4,7}, {2,5,8}, // colls
+        {0,3,6}, {1,4,7}, {2,5,8}, // cols
         {0,4,8}, {2,4,6}           // diagonals
       };
 
@@ -142,7 +139,6 @@ public class GameManage : MonoBehaviour
                 isTie = false;
                 break;
             }
-
         }
 
         return isTie;
@@ -166,6 +162,11 @@ public class GameManage : MonoBehaviour
 
         currentPlayer = ePlayer.X;
         resultText.text = "";
+        isComputerPlaying = false;
     }
 
+    public void SetUpComputerGame()
+    {
+        isComputerPlaying = true;
+    }
 }
